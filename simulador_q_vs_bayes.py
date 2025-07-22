@@ -20,7 +20,7 @@ El entorno puede ser **estático** (el oponente se comporta igual siempre) o **d
 # Controles de interfaz
 # --------------------------
 episodes = st.slider("Número de episodios", 500, 5000, 2000, step=500)
-switch_interval = st.slider("Intervalo de cambio del oponente (si es dinámico)", 100, 1000, 500, step=100)
+switch_interval = st.slider("Intervalo de cambio del oponente (si es dinámico)", 10, 1000, 100, step=10)
 opponent_mode = st.selectbox("Modo del oponente", ["Estático", "Dinámico"])
 
 run_simulation = st.button("Ejecutar simulación")
@@ -98,7 +98,9 @@ if run_simulation:
         ax1.plot(np.cumsum(q_learning_rewards), label="Q-Learning (acumulado)")
         ax1.plot(np.cumsum(bayes_rewards), label="Bayesiano (acumulado)")
         for switch in switch_points:
-            ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
+                ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
+                if switch_interval < 100:
+                    ax1.axvspan(switch, switch + switch_interval, color='red', alpha=0.05)
         ax1.set_title("Curva de Ganancias Acumuladas")
         ax1.set_xlabel("Episodios")
         ax1.set_ylabel("Recompensa acumulada")
@@ -109,7 +111,9 @@ if run_simulation:
         fig2, ax2 = plt.subplots()
         ax2.plot(bayes_beliefs, color="orange")
         for switch in switch_points:
-            ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
+                ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
+                if switch_interval < 100:
+                    ax2.axvspan(switch, switch + switch_interval, color='red', alpha=0.05)
         ax2.set_title("Evolución de la creencia Bayesiana sobre cooperación")
         ax2.set_xlabel("Episodios")
         ax2.set_ylabel("P(cooperate)")
