@@ -100,7 +100,7 @@ if run_simulation:
         for switch in switch_points:
                 ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
                 if switch_interval < 100:
-                    ax1.axvspan(switch, switch + switch_interval, color='red', alpha=0.05)
+                    ax1.axvspan(switch, switch + switch_interval, color='red', alpha=0.01)
         ax1.set_title("Curva de Ganancias Acumuladas")
         ax1.set_xlabel("Episodios")
         ax1.set_ylabel("Recompensa acumulada")
@@ -113,7 +113,7 @@ if run_simulation:
         for switch in switch_points:
                 ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
                 if switch_interval < 100:
-                    ax2.axvspan(switch, switch + switch_interval, color='red', alpha=0.05)
+                    ax2.axvspan(switch, switch + switch_interval, color='red', alpha=0.01)
         ax2.set_title("Evolución de la creencia Bayesiana sobre cooperación")
         ax2.set_xlabel("Episodios")
         ax2.set_ylabel("P(cooperate)")
