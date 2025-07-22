@@ -142,3 +142,29 @@ if run_simulation:
     ax4.set_title("Comparación de estilos de conducta")
     ax4.set_ylabel("Frecuencia")
     st.pyplot(fig4)
+
+    st.subheader("Evolución temporal de estilos de conducta")
+    def temporal_profile(behaviors, label):
+        chunks = [behaviors[i:i+100] for i in range(0, len(behaviors), 100)]
+        summary = []
+        for block in chunks:
+            counts = pd.Series(block).value_counts()
+            summary.append(counts)
+        return pd.DataFrame(summary).fillna(0)
+
+    q_temp = temporal_profile(q_behaviors, "Q-Learning")
+    bayes_temp = temporal_profile(bayes_behaviors, "Bayesiano")
+
+    fig5, ax5 = plt.subplots(figsize=(10, 4))
+    q_temp.plot(ax=ax5)
+    ax5.set_title("Q-Learning: evolución de estilos de conducta (por bloques de 100 episodios)")
+    ax5.set_xlabel("Bloque de 100 episodios")
+    ax5.set_ylabel("Frecuencia")
+    st.pyplot(fig5)
+
+    fig6, ax6 = plt.subplots(figsize=(10, 4))
+    bayes_temp.plot(ax=ax6)
+    ax6.set_title("Bayesiano: evolución de estilos de conducta (por bloques de 100 episodios)")
+    ax6.set_xlabel("Bloque de 100 episodios")
+    ax6.set_ylabel("Frecuencia")
+    st.pyplot(fig6)
