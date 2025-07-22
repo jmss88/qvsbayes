@@ -51,8 +51,13 @@ if run_simulation:
     results_bayes = {"A_wins": 0, "loss": 0}
     bayes_rewards = []
     bayes_beliefs = []
+    switch_points = []
 
     for step in range(episodes):
+        # Registrar cambios de estrategia
+        if opponent_mode == "Dinámico" and step % switch_interval == 0:
+            switch_points.append(step)
+
         # Q-learning
         a_q = np.random.choice(ACTIONS) if np.random.rand() < epsilon else max(q_values, key=q_values.get)
         o_q = opponent_behavior(step)
@@ -92,6 +97,8 @@ if run_simulation:
         fig1, ax1 = plt.subplots()
         ax1.plot(np.cumsum(q_learning_rewards), label="Q-Learning (acumulado)")
         ax1.plot(np.cumsum(bayes_rewards), label="Bayesiano (acumulado)")
+        for switch in switch_points:
+            ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
         ax1.set_title("Curva de Ganancias Acumuladas")
         ax1.set_xlabel("Episodios")
         ax1.set_ylabel("Recompensa acumulada")
@@ -101,6 +108,8 @@ if run_simulation:
     with col2:
         fig2, ax2 = plt.subplots()
         ax2.plot(bayes_beliefs, color="orange")
+        for switch in switch_points:
+            ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
         ax2.set_title("Evolución de la creencia Bayesiana sobre cooperación")
         ax2.set_xlabel("Episodios")
         ax2.set_ylabel("P(cooperate)")
