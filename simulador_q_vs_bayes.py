@@ -39,22 +39,33 @@ def opponent_behavior(step):
 if run_simulation:
     ACTIONS = ["cooperate", "defect"]
 
-    # Q-Learning
     q_values = {"cooperate": 0.0, "defect": 0.0}
     alpha_q, gamma_q, epsilon = 0.1, 0.9, 0.1
     results_q = {"A_wins": 0, "loss": 0}
     q_learning_rewards = []
+    q_behaviors = []
 
-    # Bayesiano
     alpha_bayes = 1
     beta_bayes = 1
     results_bayes = {"A_wins": 0, "loss": 0}
     bayes_rewards = []
     bayes_beliefs = []
+    bayes_behaviors = []
     switch_points = []
 
+    def classify_behavior(a_action, b_action):
+        if a_action == "defect" and b_action == "cooperate":
+            return "Explotadora"
+        elif a_action == "cooperate" and b_action == "defect":
+            return "Sumisa"
+        elif a_action == "defect" and b_action == "defect":
+            return "Agresiva"
+        elif a_action == "cooperate" and b_action == "cooperate":
+            return "Cooperativa"
+        else:
+            return "Indefinida"
+
     for step in range(episodes):
-        # Registrar cambios de estrategia
         if opponent_mode == "Dinámico" and step % switch_interval == 0:
             switch_points.append(step)
 
@@ -65,6 +76,7 @@ if run_simulation:
         results_q["A_wins" if reward_q == 1 else "loss"] += 1
         q_values[a_q] += alpha_q * (reward_q + gamma_q * max(q_values.values()) - q_values[a_q])
         q_learning_rewards.append(reward_q)
+        q_behaviors.append(classify_behavior(a_q, o_q))
 
         # Bayesiano
         p_coop = alpha_bayes / (alpha_bayes + beta_bayes)
@@ -78,28 +90,23 @@ if run_simulation:
             beta_bayes += 1
         bayes_rewards.append(reward_b)
         bayes_beliefs.append(p_coop)
+        bayes_behaviors.append(classify_behavior(a_b, o_b))
 
-    # --------------------------
-    # Mostrar resultados
-    # --------------------------
     st.subheader("Resultados")
     df_results = pd.DataFrame({
         "Modelo": ["Q-Learning", "Q-Learning", "Bayesiano", "Bayesiano"],
         "Resultado": ["A_wins", "loss", "A_wins", "loss"],
         "Conteo": [results_q["A_wins"], results_q["loss"], results_bayes["A_wins"], results_bayes["loss"]]
     })
-
     st.dataframe(df_results, use_container_width=True)
 
     col1, col2 = st.columns(2)
-
     with col1:
         fig1, ax1 = plt.subplots()
         ax1.plot(np.cumsum(q_learning_rewards), label="Q-Learning (acumulado)")
         ax1.plot(np.cumsum(bayes_rewards), label="Bayesiano (acumulado)")
         for switch in switch_points:
-                ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
-                
+            ax1.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
         ax1.set_title("Curva de Ganancias Acumuladas")
         ax1.set_xlabel("Episodios")
         ax1.set_ylabel("Recompensa acumulada")
@@ -110,8 +117,7 @@ if run_simulation:
         fig2, ax2 = plt.subplots()
         ax2.plot(bayes_beliefs, color="orange")
         for switch in switch_points:
-                ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
-                
+            ax2.axvline(x=switch, color='gray', linestyle='--', linewidth=0.8)
         ax2.set_title("Evolución de la creencia Bayesiana sobre cooperación")
         ax2.set_xlabel("Episodios")
         ax2.set_ylabel("P(cooperate)")
@@ -123,3 +129,16 @@ if run_simulation:
     ax3.set_ylabel("A_wins")
     ax3.set_title("Comparación de Ganancias entre Modelos")
     st.pyplot(fig3)
+
+    st.subheader("Perfiles conductuales acumulados")
+    df_behavior = pd.DataFrame({
+        "Q-Learning": pd.Series(q_behaviors).value_counts(),
+        "Bayesiano": pd.Series(bayes_behaviors).value_counts()
+    }).fillna(0).astype(int)
+    st.dataframe(df_behavior)
+
+    fig4, ax4 = plt.subplots()
+    df_behavior.plot(kind='bar', ax=ax4)
+    ax4.set_title("Comparación de estilos de conducta")
+    ax4.set_ylabel("Frecuencia")
+    st.pyplot(fig4)
