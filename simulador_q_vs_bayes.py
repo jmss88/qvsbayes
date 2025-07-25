@@ -53,6 +53,8 @@ if run_simulation:
     bayes_behaviors = []
     switch_points = []
 
+    trajectory_data = []
+
     def classify_behavior(a_action, b_action):
         if a_action == "defect" and b_action == "cooperate":
             return "Explotadora"
@@ -78,6 +80,20 @@ if run_simulation:
         q_learning_rewards.append(reward_q)
         q_behaviors.append(classify_behavior(a_q, o_q))
 
+        trajectory_data.append({
+            "episodio": step,
+            "modelo": "Q-Learning",
+            "accion_A": a_q,
+            "accion_B": o_q,
+            "conducta_clasificada": classify_behavior(a_q, o_q),
+            "creencia_P_coop": np.nan,
+            "valor_Q_cooperate": q_values["cooperate"],
+            "valor_Q_defect": q_values["defect"],
+            "recompensa": reward_q,
+            "recompensa_acumulada": sum(q_learning_rewards),
+            "cambio_estrategia_B": step in switch_points
+        })
+
         # Bayesiano
         p_coop = alpha_bayes / (alpha_bayes + beta_bayes)
         a_b = "defect" if p_coop > 0.0 else "cooperate"
@@ -91,6 +107,20 @@ if run_simulation:
         bayes_rewards.append(reward_b)
         bayes_beliefs.append(p_coop)
         bayes_behaviors.append(classify_behavior(a_b, o_b))
+
+        trajectory_data.append({
+            "episodio": step,
+            "modelo": "Bayesiano",
+            "accion_A": a_b,
+            "accion_B": o_b,
+            "conducta_clasificada": classify_behavior(a_b, o_b),
+            "creencia_P_coop": p_coop,
+            "valor_Q_cooperate": np.nan,
+            "valor_Q_defect": np.nan,
+            "recompensa": reward_b,
+            "recompensa_acumulada": sum(bayes_rewards),
+            "cambio_estrategia_B": step in switch_points
+        })
 
     st.subheader("Resultados")
     df_results = pd.DataFrame({
@@ -143,28 +173,7 @@ if run_simulation:
     ax4.set_ylabel("Frecuencia")
     st.pyplot(fig4)
 
-    st.subheader("Evolución temporal de estilos de conducta")
-    def temporal_profile(behaviors, label):
-        chunks = [behaviors[i:i+100] for i in range(0, len(behaviors), 100)]
-        summary = []
-        for block in chunks:
-            counts = pd.Series(block).value_counts()
-            summary.append(counts)
-        return pd.DataFrame(summary).fillna(0)
-
-    q_temp = temporal_profile(q_behaviors, "Q-Learning")
-    bayes_temp = temporal_profile(bayes_behaviors, "Bayesiano")
-
-    fig5, ax5 = plt.subplots(figsize=(10, 4))
-    q_temp.plot(ax=ax5)
-    ax5.set_title("Q-Learning: evolución de estilos de conducta (por bloques de 100 episodios)")
-    ax5.set_xlabel("Bloque de 100 episodios")
-    ax5.set_ylabel("Frecuencia")
-    st.pyplot(fig5)
-
-    fig6, ax6 = plt.subplots(figsize=(10, 4))
-    bayes_temp.plot(ax=ax6)
-    ax6.set_title("Bayesiano: evolución de estilos de conducta (por bloques de 100 episodios)")
-    ax6.set_xlabel("Bloque de 100 episodios")
-    ax6.set_ylabel("Frecuencia")
-    st.pyplot(fig6)
+    st.subheader("Trayectoria completa de episodios")
+    df_traj = pd.DataFrame(trajectory_data)
+    st.dataframe(df_traj, use_container_width=True)
+    st.download_button("📥 Descargar CSV de trayectorias", data=df_traj.to_csv(index=False), file_name="trayectorias_agente.csv", mime="text/csv")
